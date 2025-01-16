@@ -13,8 +13,10 @@ public class PlayerClientController : NetworkBehaviour
     [Range(3, 20)] [SerializeField] private float _movementSpeed;
     [SerializeField] private MeshRenderer _meshRenderer;
     [SerializeField] private CharacterController _characterController;
+    [SerializeField] private ProjectileController _projectilePrefab;
 
     private Vector3 _aimDirection;
+    private PlayerClientController _enemy;
     private void Awake()
     {
         _characterController.enabled = false;
@@ -30,6 +32,7 @@ public class PlayerClientController : NetworkBehaviour
         else
         {
             GoToSpawnPoint();
+            _enemy = GameManager.Instance.GetEnemyPlayerClient(NetworkObjectId);
             _characterController.enabled = true;
         }
     }
@@ -65,7 +68,8 @@ public class PlayerClientController : NetworkBehaviour
 
     private void InstantiateProjectile(Vector3 aimPosition, Vector3 aimDirection)
     {
-        ProjectileController projectileController = GameManager.Instance.ProjectilePool.GetProjectileFromPool();
+        ProjectileController projectileController = Instantiate(_projectilePrefab);
+        projectileController.SetTarget(_enemy.transform.position);
         projectileController.transform.position = aimPosition;
         projectileController.transform.right = aimDirection;
         projectileController.GetComponent<NetworkObject>().Spawn();

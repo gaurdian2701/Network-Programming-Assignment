@@ -21,7 +21,6 @@ public class GameManager : NetworkBehaviour
     private const int waitTimeForClients = 100;
     
     public EventService EventService;
-    public ProjectilePool ProjectilePool;
 
     private void Awake()
     {
@@ -31,7 +30,6 @@ public class GameManager : NetworkBehaviour
             Destroy(this);
         
         EventService = new EventService();
-        ProjectilePool = new ProjectilePool(_projectilePrefab);
         _playerClientsOnServer = new List<PlayerClientController>();
     }
     
@@ -44,7 +42,6 @@ public class GameManager : NetworkBehaviour
     {
         NetworkManager.Singleton.OnClientConnectedCallback -= CheckIfAllPlayersHaveConnected;
     }
-    
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -57,6 +54,16 @@ public class GameManager : NetworkBehaviour
         base.OnNetworkDespawn();
         _playerClientsOnServer.Clear();
         UnsubscribeFromEvents();
+    }
+
+    public PlayerClientController GetEnemyPlayerClient(ulong networkObjectID)
+    {
+        foreach (PlayerClientController playerClientController in _playerClientsOnServer)
+        {
+            if(playerClientController.NetworkObjectId != networkObjectID)
+                return playerClientController;
+        }
+        return null;
     }
 
     private void CheckIfAllPlayersHaveConnected(ulong clientId)

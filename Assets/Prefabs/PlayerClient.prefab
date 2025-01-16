@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7730559727478440707}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: AimTransform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -47,7 +47,7 @@ GameObject:
   - component: {fileID: 6578149938170946498}
   - component: {fileID: 921494926653880432}
   - component: {fileID: 8902430278097644443}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PlayerClient
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -163,10 +163,11 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   _aimTransform: {fileID: 7730559727478440707}
   _offsetRadius: 1.46
-  _deadzoneValue: 15
+  _deadzoneValue: 17.3
   _movementSpeed: 7
   _meshRenderer: {fileID: 7322494339636018873}
   _characterController: {fileID: 921494926653880432}
+  _projectilePrefab: {fileID: 6109274228608731597, guid: c2ff63d731f90fd43b6393befff42c3e, type: 3}
 --- !u!143 &921494926653880432
 CharacterController:
   m_ObjectHideFlags: 0
@@ -186,7 +187,7 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 0.93
-  m_Radius: 0.68
+  m_Radius: 0.88
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
@@ -239,7 +240,7 @@ GameObject:
   - component: {fileID: 8054580525293886384}
   - component: {fileID: 6997053765273791536}
   - component: {fileID: 725673623178338553}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
