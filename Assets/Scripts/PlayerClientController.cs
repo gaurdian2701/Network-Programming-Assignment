@@ -6,6 +6,7 @@ using Unity.Netcode.Components;
 using Unity.Networking.Transport;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Random = UnityEngine.Random;
 
 public class PlayerClientController : NetworkBehaviour
 {
@@ -17,10 +18,27 @@ public class PlayerClientController : NetworkBehaviour
     [SerializeField] private CharacterController _characterController;
     [SerializeField] private ProjectileController _projectilePrefab;
     [SerializeField] private TextMeshProUGUI _healthText;
+    [SerializeField] private TextMeshProUGUI _emoteText;
 
     private Vector3 _aimDirection;
     private HealthSystem _playerHealth;
     private bool _isUpdated;
+    private bool _isAlive = true;
+
+    private string[] _aliveEmotes = new string[]
+    {
+        "COME AT ME",
+        "I AM GONNA BEAT YOU",
+        "SHOW ME WHAT YA GOT"
+    };
+
+    private string[] _deadEmotes = new string[]
+    {
+        "I AM ALREADY DEAD, STUPID",
+        "YOU CAN'T KILL A DEAD CUBE",
+        "THE GAME IS OVER"
+    };
+
     private void Awake()
     {
         _characterController.enabled = false;
@@ -53,6 +71,39 @@ public class PlayerClientController : NetworkBehaviour
             _characterController.enabled = true;
         }
     }
+
+    private void Update()
+    {
+        DoEmote();
+        if (!_isUpdated)
+            return;
+
+        AimGun();
+        ShootProjectile();
+        DoPlayerMovement();
+    }
+
+    private void DoEmote()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            string textToBeShown;
+            if(_isAlive)
+                textToBeShown = _aliveEmotes[Random.Range(0, _aliveEmotes.Length)];
+            else
+                textToBeShown = _deadEmotes[Random.Range(0, _deadEmotes.Length)];
+            UpdateEmoteRpc(NetworkObjectId, textToBeShown);
+        }
+    }
+    
+    [Rpc(SendTo.ClientsAndHost)]
+    private void UpdateEmoteRpc(ulong networkObjectID, string emoteText)
+    {
+        if(NetworkObjectId != networkObjectID)
+            return;
+        _emoteText.text = emoteText;
+    }
+    
     public void TakeDamage(int amount)
     {
         UpdateHealthRpc(amount, NetworkObjectId);
@@ -68,20 +119,12 @@ public class PlayerClientController : NetworkBehaviour
     }
     
     private void UpdateHealthUI(int health) => _healthText.text = health.ToString();
-    private void Update()
-    {
-        if (!_isUpdated)
-            return;
-
-        AimGun();
-        ShootProjectile();
-        DoPlayerMovement();
-    }
 
     private void OnPlayerDeath(ulong networkObjectID)
     {
         if (!IsServer || networkObjectID != NetworkObjectId)
             return;
+        _isAlive = false;
         OnPlayerDeathRpc(networkObjectID);
     }
 
@@ -90,7 +133,8 @@ public class PlayerClientController : NetworkBehaviour
     {
         if(networkObjectID != NetworkObjectId)
             return;
-        enabled = false;
+        _isUpdated = false;
+        _isAlive = false;
     }
     private void AimGun()
     {

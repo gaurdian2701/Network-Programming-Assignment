@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -12,6 +13,8 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance { get; set; }
 
     [SerializeField] private ProjectileController _projectilePrefab;
+    [SerializeField] private GameObject _statusPanel;
+    [SerializeField] private TextMeshProUGUI _statusText;
     
     private List<PlayerClientController> _playerClientsOnServer;
     private int _currentNumberOfPlayersConnected;
@@ -19,6 +22,7 @@ public class GameManager : NetworkBehaviour
     
     private const int _maxPlayers = 2;
     private const int _waitTimeForClients = 100;
+    private const string _waitingMessage = "WAITING FOR PLAYERS";
     
     public EventService EventService;
 
@@ -45,8 +49,11 @@ public class GameManager : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        if(IsServer)
+        if (IsServer)
+        {
             SubscribeToEvents();
+            UpdateUIStatusRpc(GameStatus.WAITING);
+        }
     }
 
     public override void OnNetworkDespawn()
@@ -55,16 +62,32 @@ public class GameManager : NetworkBehaviour
         _playerClientsOnServer.Clear();
         UnsubscribeFromEvents();
     }
-
     public Vector3 GetSpawnPosition() => SpawnPositions[_latestFreeSpawnIndex++].position;
 
+    [Rpc(SendTo.ClientsAndHost)]
+    private void UpdateUIStatusRpc(GameStatus gameStatus)
+    {
+        string text = String.Empty;
+        _statusPanel.SetActive(true);
+        switch (gameStatus)
+        {
+            case GameStatus.WAITING:
+                text = _waitingMessage;
+                break;
+            case GameStatus.STARTED:
+                _statusPanel.SetActive(false);
+                break;
+        }
+        _statusText.text = text;
+    }
     private void CheckIfAllPlayersHaveConnected(ulong clientId)
     {
         _currentNumberOfPlayersConnected++;
         if (_currentNumberOfPlayersConnected == _maxPlayers)
         {
             _playerClientsOnServer = FindObjectsByType<PlayerClientController>(FindObjectsSortMode.None).ToList();
-            InitializePlayersAsync();   
+            InitializePlayersAsync(); 
+            UpdateUIStatusRpc(GameStatus.STARTED);
         }
     }
 
