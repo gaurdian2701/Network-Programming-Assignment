@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using Unity.Networking.Transport;
@@ -14,31 +16,61 @@ public class PlayerClientController : NetworkBehaviour
     [SerializeField] private MeshRenderer _meshRenderer;
     [SerializeField] private CharacterController _characterController;
     [SerializeField] private ProjectileController _projectilePrefab;
+    [SerializeField] private TextMeshProUGUI _healthText;
 
     private Vector3 _aimDirection;
-    private PlayerClientController _enemy;
+    private HealthSystem _playerHealth;
+    private bool _isUpdated;
     private void Awake()
     {
         _characterController.enabled = false;
+        _isUpdated = false;
     }
 
+    public override void OnNetworkSpawn()
+    {
+        _playerHealth = new HealthSystem(NetworkObjectId);
+        UpdateHealthUI(_playerHealth.CurrentHealth);
+        GameManager.Instance.EventService.OnPlayerDiedEvent += OnPlayerDeath;
+    }
+
+    private void OnDestroy()
+    {
+        GameManager.Instance.EventService.OnPlayerDiedEvent -= OnPlayerDeath;
+    }
     public void EnablePlayer()
     {
         if (!IsLocalPlayer)
         {
-            _characterController.enabled = false;
+            _isUpdated = false;
+            _characterController.enabled = true;
             enabled = false;
         }
         else
         {
-            GoToSpawnPoint();
-            _enemy = GameManager.Instance.GetEnemyPlayerClient(NetworkObjectId);
+            GoToSpawnPointServerRpc();
+            _isUpdated = true;
             _characterController.enabled = true;
         }
     }
+    public void TakeDamage(int amount)
+    {
+        UpdateHealthRpc(amount, NetworkObjectId);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void UpdateHealthRpc(int amount, ulong networkObjectID)
+    {
+        if (NetworkObjectId != networkObjectID)
+            return;
+        _playerHealth.DecreaseHealth(amount);
+        _healthText.text = _playerHealth.CurrentHealth.ToString();
+    }
+    
+    private void UpdateHealthUI(int health) => _healthText.text = health.ToString();
     private void Update()
     {
-        if (!_characterController.enabled)
+        if (!_isUpdated)
             return;
 
         AimGun();
@@ -46,6 +78,20 @@ public class PlayerClientController : NetworkBehaviour
         DoPlayerMovement();
     }
 
+    private void OnPlayerDeath(ulong networkObjectID)
+    {
+        if (!IsServer || networkObjectID != NetworkObjectId)
+            return;
+        OnPlayerDeathRpc(networkObjectID);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void OnPlayerDeathRpc(ulong networkObjectID)
+    {
+        if(networkObjectID != NetworkObjectId)
+            return;
+        enabled = false;
+    }
     private void AimGun()
     {
         _aimDirection = Camera.main.ScreenToWorldPoint(GetCamPos() * _deadzoneValue) - transform.position;
@@ -69,7 +115,7 @@ public class PlayerClientController : NetworkBehaviour
     private void InstantiateProjectile(Vector3 aimPosition, Vector3 aimDirection)
     {
         ProjectileController projectileController = Instantiate(_projectilePrefab);
-        projectileController.SetTarget(_enemy.transform.position);
+        projectileController.SetFriendly(this);
         projectileController.transform.position = aimPosition;
         projectileController.transform.right = aimDirection;
         projectileController.GetComponent<NetworkObject>().Spawn();
@@ -82,13 +128,17 @@ public class PlayerClientController : NetworkBehaviour
     }
     private Vector3 GetCamPos() => new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
 
-    private void GoToSpawnPoint()
+    [Rpc(SendTo.Server)]
+    private void GoToSpawnPointServerRpc()
     {
-        if (!IsOwner)
-            return;
-        if (IsHost)
-            transform.position = GameManager.Instance.SpawnPositions[0].position;
-        else
-            transform.position = GameManager.Instance.SpawnPositions[1].position;
+        Vector3 position = GameManager.Instance.GetSpawnPosition();
+        transform.position = position;
+        GoToSpawnPointClientRpc(position);
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void GoToSpawnPointClientRpc(Vector3 position)
+    {
+        transform.position = position;
     }
 }

@@ -18,7 +18,7 @@ public class GameManager : NetworkBehaviour
     private int _latestFreeSpawnIndex;
     
     private const int _maxPlayers = 2;
-    private const int waitTimeForClients = 100;
+    private const int _waitTimeForClients = 100;
     
     public EventService EventService;
 
@@ -56,15 +56,7 @@ public class GameManager : NetworkBehaviour
         UnsubscribeFromEvents();
     }
 
-    public PlayerClientController GetEnemyPlayerClient(ulong networkObjectID)
-    {
-        foreach (PlayerClientController playerClientController in _playerClientsOnServer)
-        {
-            if(playerClientController.NetworkObjectId != networkObjectID)
-                return playerClientController;
-        }
-        return null;
-    }
+    public Vector3 GetSpawnPosition() => SpawnPositions[_latestFreeSpawnIndex++].position;
 
     private void CheckIfAllPlayersHaveConnected(ulong clientId)
     {
@@ -78,7 +70,7 @@ public class GameManager : NetworkBehaviour
 
     private async void InitializePlayersAsync()
     {
-        await Task.Delay(waitTimeForClients);
+        await Task.Delay(_waitTimeForClients);
         EnableAllClientsRpc();
     }
 
