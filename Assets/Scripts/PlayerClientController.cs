@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading.Tasks;
 using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -24,6 +25,8 @@ public class PlayerClientController : NetworkBehaviour
     private HealthSystem _playerHealth;
     private bool _isUpdated;
     private bool _isAlive = true;
+    
+    public Vector3 SpawnPosition;
 
     private string[] _aliveEmotes = new string[]
     {
@@ -66,7 +69,7 @@ public class PlayerClientController : NetworkBehaviour
         }
         else
         {
-            GoToSpawnPointServerRpc();
+            GoToSpawnPoint();
             _isUpdated = true;
             _characterController.enabled = true;
         }
@@ -172,17 +175,22 @@ public class PlayerClientController : NetworkBehaviour
     }
     private Vector3 GetCamPos() => new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
 
+    private void GoToSpawnPoint()
+    {
+        GoToSpawnPointServerRpc();
+    }
     [Rpc(SendTo.Server)]
     private void GoToSpawnPointServerRpc()
     {
-        Vector3 position = GameManager.Instance.GetSpawnPosition();
-        transform.position = position;
-        GoToSpawnPointClientRpc(position);
+        transform.position = SpawnPosition;
+        GoToSpawnPointClientRpc(SpawnPosition);
     }
 
     [Rpc(SendTo.NotServer)]
     private void GoToSpawnPointClientRpc(Vector3 position)
     {
+        if (!IsOwner)
+            return;
         transform.position = position;
     }
 }

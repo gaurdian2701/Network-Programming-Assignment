@@ -10,6 +10,8 @@ public class GameManager : NetworkBehaviour
 {
     
     public List<Transform> SpawnPositions;
+    [Range(2, 4)]
+    public int _maxPlayers;
     public static GameManager Instance { get; set; }
 
     [SerializeField] private ProjectileController _projectilePrefab;
@@ -19,9 +21,7 @@ public class GameManager : NetworkBehaviour
     private List<PlayerClientController> _playerClientsOnServer;
     private int _currentNumberOfPlayersConnected;
     private int _latestFreeSpawnIndex;
-    
-    private const int _maxPlayers = 2;
-    private const int _waitTimeForClients = 100;
+    private const int _waitTimeForClients = 500;
     private const string _waitingMessage = "WAITING FOR PLAYERS";
     
     public EventService EventService;
@@ -50,10 +50,8 @@ public class GameManager : NetworkBehaviour
     {
         base.OnNetworkSpawn();
         if (IsServer)
-        {
             SubscribeToEvents();
-            UpdateUIStatusRpc(GameStatus.WAITING);
-        }
+        UpdateUIStatusRpc(GameStatus.WAITING);
     }
 
     public override void OnNetworkDespawn()
@@ -62,7 +60,6 @@ public class GameManager : NetworkBehaviour
         _playerClientsOnServer.Clear();
         UnsubscribeFromEvents();
     }
-    public Vector3 GetSpawnPosition() => SpawnPositions[_latestFreeSpawnIndex++].position;
 
     [Rpc(SendTo.ClientsAndHost)]
     private void UpdateUIStatusRpc(GameStatus gameStatus)
@@ -108,6 +105,9 @@ public class GameManager : NetworkBehaviour
             playerClients = FindObjectsByType<PlayerClientController>(FindObjectsSortMode.None).ToList();
 
         for (int i = 0; i < playerClients.Count; i++)
-            playerClients[i].EnablePlayer();
+        {
+            playerClients[i].SpawnPosition = SpawnPositions[_latestFreeSpawnIndex++].position;
+            playerClients[i].EnablePlayer();  
+        }
     }
 }
