@@ -435,14 +435,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   _aimTransform: {fileID: 7730559727478440707}
-  _offsetRadius: 1.91
-  _deadzoneValue: 17.3
+  _aimOffsetRadius: 2.15
+  _aimDeadzoneValue: 15.1
   _movementSpeed: 7
   _meshRenderer: {fileID: 7322494339636018873}
   _characterController: {fileID: 921494926653880432}
   _projectilePrefab: {fileID: 6109274228608731597, guid: c2ff63d731f90fd43b6393befff42c3e, type: 3}
   _healthText: {fileID: 4482528397302163226}
   _emoteText: {fileID: 3386488115676989157}
+  SpawnPosition: {x: 0, y: 0, z: 0}
 --- !u!143 &921494926653880432
 CharacterController:
   m_ObjectHideFlags: 0

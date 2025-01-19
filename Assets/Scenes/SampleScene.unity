@@ -1812,7 +1812,7 @@ MonoBehaviour:
   - {fileID: 958433107}
   - {fileID: 1242808041}
   - {fileID: 1533808096}
-  _maxPlayers: 4
+  _maxPlayers: 2
   _projectilePrefab: {fileID: 6109274228608731597, guid: c2ff63d731f90fd43b6393befff42c3e, type: 3}
   _statusPanel: {fileID: 229843444}
   _statusText: {fileID: 231952494}

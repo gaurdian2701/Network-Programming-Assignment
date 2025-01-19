@@ -12,8 +12,6 @@ using Random = UnityEngine.Random;
 public class PlayerClientController : NetworkBehaviour
 {
     [SerializeField] private Transform _aimTransform;
-    [Range(1, 5)] [SerializeField] private float _aimOffsetRadius;
-    [Range(5, 20)] [SerializeField] private float _aimDeadzoneValue;
     [Range(3, 20)] [SerializeField] private float _movementSpeed;
     [SerializeField] private MeshRenderer _meshRenderer;
     [SerializeField] private CharacterController _characterController;
@@ -28,6 +26,8 @@ public class PlayerClientController : NetworkBehaviour
     
     public Vector3 SpawnPosition;
 
+    private const float _aimOffsetRadius = 1.28f;
+    private const float _aimDeadzoneValue = 18f;
     private string[] _aliveEmotes = new string[]
     {
         "COME AT ME",
