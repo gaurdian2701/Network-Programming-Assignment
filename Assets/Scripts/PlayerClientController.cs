@@ -12,8 +12,8 @@ using Random = UnityEngine.Random;
 public class PlayerClientController : NetworkBehaviour
 {
     [SerializeField] private Transform _aimTransform;
-    [Range(1, 5)] [SerializeField] private float _offsetRadius;
-    [Range(5, 20)] [SerializeField] private float _deadzoneValue;
+    [Range(1, 5)] [SerializeField] private float _aimOffsetRadius;
+    [Range(5, 20)] [SerializeField] private float _aimDeadzoneValue;
     [Range(3, 20)] [SerializeField] private float _movementSpeed;
     [SerializeField] private MeshRenderer _meshRenderer;
     [SerializeField] private CharacterController _characterController;
@@ -141,9 +141,9 @@ public class PlayerClientController : NetworkBehaviour
     }
     private void AimGun()
     {
-        _aimDirection = Camera.main.ScreenToWorldPoint(GetCamPos() * _deadzoneValue) - transform.position;
+        _aimDirection = Camera.main.ScreenToWorldPoint(GetCamPos() * _aimDeadzoneValue) - transform.position;
         float angle = Mathf.Atan2(_aimDirection.y, _aimDirection.x);
-        Vector3 offsetVector = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0) * _offsetRadius;
+        Vector3 offsetVector = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0) * _aimOffsetRadius;
         _aimTransform.position = transform.position + offsetVector;
     }
 
